@@ -1,29 +1,29 @@
 import streamlit as st
 from PIL import Image
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 from datetime import datetime
 
-# Logo image (must be in the same folder)
-logo = Image.open("logo.png")
-
 # Page setup
+logo = Image.open("logo.png")
 st.set_page_config(page_title="TnBcS Inquiry", page_icon=logo, layout="centered")
 
+# Google Sheets connection using modern google-auth
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+SERVICE_ACCOUNT_FILE = "tnbcs-credentials.json"
 
-
-
-# Google Sheets connection
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("tnbcs-credentials.json", scope)
-client = gspread.authorize(creds)
+credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+client = gspread.authorize(credentials)
 sheet = client.open("TnBcS Prospects").sheet1
 
 # Initialize session state
 if 'form_submitted' not in st.session_state:
     st.session_state.form_submitted = False
 
-# Show confirmation page if form is submitted
+# Show confirmation if submitted
 if st.session_state.form_submitted:
     st.success("✅ Thank you! Our team will connect with you shortly.")
     st.markdown("You can close this tab or go back to the [TnBcS Home Page](https://tnbcs.framer.website).")
@@ -53,7 +53,6 @@ else:
             if not name.strip() or not phone.strip():
                 st.error("Please fill all required fields marked with *.")
             else:
-                # Write to Google Sheet
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 sheet.append_row([timestamp, name, company, email, phone, service, message])
                 st.session_state.form_submitted = True
