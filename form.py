@@ -3,19 +3,21 @@ from PIL import Image
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
+import json
+import os
 
 # Page setup
 logo = Image.open("logo.png")
 st.set_page_config(page_title="TnBcS Inquiry", page_icon=logo, layout="centered")
 
-# Google Sheets connection using modern google-auth
+# Load credentials from Streamlit secrets
+service_account_info = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT"])
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
-SERVICE_ACCOUNT_FILE = "tnbcs-credentials.json"
 
-credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+credentials = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
 client = gspread.authorize(credentials)
 sheet = client.open("TnBcS Prospects").sheet1
 
